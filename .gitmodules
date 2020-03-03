@@ -1,0 +1,12 @@
+[submodule "rumprun-smp"]
+	path = rumprun-smp
+	url = https://github.com/ssrg-vt/rumprun-smp
+[submodule "librettos-packages"]
+	path = librettos-packages
+	url = https://github.com/ssrg-vt/librettos-packages
+[submodule "xen"]
+	path = xen
+	url = https://github.com/ssrg-vt/xen
+[submodule "librettos-network"]
+	path = librettos-network
+	url = https://github.com/ssrg-vt/librettos-network

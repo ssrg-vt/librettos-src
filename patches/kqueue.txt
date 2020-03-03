@@ -1,0 +1,2 @@
+The patch is based on OpenBSD's patch:
+https://www.mail-archive.com/tech@openbsd.org/msg42433.html

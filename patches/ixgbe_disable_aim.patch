@@ -1,0 +1,13 @@
+diff --git a/sys/dev/pci/ixgbe/ixgbe.c b/sys/dev/pci/ixgbe/ixgbe.c
+index b3613736d3ed..bf4f4d95fab2 100644
+--- a/sys/dev/pci/ixgbe/ixgbe.c
++++ b/sys/dev/pci/ixgbe/ixgbe.c
+@@ -298,7 +298,7 @@ MODULE_DEPEND(ix, netmap, 1, 1, 1);
+  * is varied over time based on the
+  * traffic for that interrupt vector
+  */
+-static bool ixgbe_enable_aim = true;
++static bool ixgbe_enable_aim = false;
+ #define SYSCTL_INT(_a1, _a2, _a3, _a4, _a5, _a6, _a7)
+ SYSCTL_INT(_hw_ix, OID_AUTO, enable_aim, CTLFLAG_RDTUN, &ixgbe_enable_aim, 0,
+     "Enable adaptive interrupt moderation");

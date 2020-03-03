@@ -1,0 +1,17 @@
+diff --git a/sys/arch/amd64/include/param.h b/sys/arch/amd64/include/param.h
+index 80fdbed2a087..f1d6c8de162c 100644
+--- a/sys/arch/amd64/include/param.h
++++ b/sys/arch/amd64/include/param.h
+@@ -70,10 +70,10 @@
+  * clusters (MAPPED_MBUFS), MCLBYTES must also be an integral multiple
+  * of the hardware page size.
+  */
+-#define	MSIZE		512		/* size of an mbuf */
++#define	MSIZE		4096		/* size of an mbuf */
+ 
+ #ifndef MCLSHIFT
+-#define	MCLSHIFT	11		/* convert bytes to m_buf clusters */
++#define	MCLSHIFT	12		/* convert bytes to m_buf clusters */
+ 					/* 2K cluster can hold Ether frame */
+ #endif	/* MCLSHIFT */
+ 
