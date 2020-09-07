@@ -13,6 +13,8 @@ instructions. We will also put a more detailed description here shortly.
 with SMP and Xen HVM support as well as additional drivers
 (e.g., NVMe and ixgbe).
 
+Use gcc 8 or 9 workarounds as described in rumprun-smp's README.
+
 * librettos-network contains the network server implementation.
 
 librettos-network is based on rumprun-smp and contains the following compilation
@@ -25,6 +27,8 @@ For the ixgbe driver, you need to apply patches/ixgbe\_nomsix.patch on top of sr
 
 librettos-network contains example scripts in the _examples_ subdirectory.
 
+Use gcc 8 or 9 workarounds as described in rumprun-smp's README.
+
 * librettos-packages contains applications that were tested with and adopted for
 LibrettOS.
 
@@ -36,15 +40,15 @@ Make sure to fully delete the old one (including headers). To install build
 dependencies, your distribution may support corresponding commands such as
 
 ```
-apt-get install build-essential
-apt-get install build-dep xen
+apt-get install build-essential python-dev python3-dev
+apt-get build-dep xen
 ```
 
-**Note**: Xen currently does not compile with gcc 8, so you need to use gcc 7.
-You can use Ubuntu 17.10 or Ubuntu 18.04 LTS. You may also need to apply
-patches/xen-memfd.patch if the Xen compilation fails due to memfd issues.
-This failure depends on what Linux distribution you use. (Only apply it if
-you see errors, do _not_ do a fresh compilation when so happens.)
+**Note**: The initial version of the modified Xen hypervisor (4.10.1) was
+tested on Ubuntu 17.10. However, that version only worked with gcc 7.
+Thus, we transitioned to a newer (4.14.0) version, which we compiled
+successfully on Ubuntu 20.04.1 (gcc 9). Switch to the original (librettos)
+branch in xen if you wish to use the older version.
 
 * patches also include additional patches, such as the kqueue extension
 for NetBSD, 4K mbufs, and the adaptive interrupt moderation (aim) patches.
