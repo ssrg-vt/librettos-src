@@ -1,17 +1,17 @@
 diff --git a/sys/dev/pci/ixgbe/ixgbe.c b/sys/dev/pci/ixgbe/ixgbe.c
-index cb5e0a22aaa4..e6afc9636692 100644
+index 93fc8c03f8fd..710ddd97a74c 100644
 --- a/sys/dev/pci/ixgbe/ixgbe.c
 +++ b/sys/dev/pci/ixgbe/ixgbe.c
-@@ -6217,6 +6217,8 @@ ixgbe_allocate_legacy(struct adapter *adapter,
- 	char            intrbuf[PCI_INTRSTR_LEN];
+@@ -6445,6 +6445,8 @@ ixgbe_allocate_legacy(struct adapter *adapter,
  	const char	*intrstr = NULL;
-  
+ 	int defertx_error = 0, error;
+ 
 +	/* Used in ixgbe_enable_intr */
 +	que->msix = 0;
  	/* We allocate a single interrupt resource */
  	max_type = PCI_INTR_TYPE_MSI;
  	counts[PCI_INTR_TYPE_MSIX] = 0;
-@@ -6536,7 +6538,8 @@ ixgbe_configure_interrupts(struct adapter *adapter)
+@@ -6776,7 +6778,8 @@ ixgbe_configure_interrupts(struct adapter *adapter)
  	 *  NetBSD only: Use single vector MSI when number of CPU is 1 to save
  	 * interrupt slot.
  	 */
@@ -19,5 +19,5 @@ index cb5e0a22aaa4..e6afc9636692 100644
 +	/* Avoid MSI-X path completely for now */
 +	/* if (ncpu == 1) */
  		goto msi;
- 	
+ 
  	/* First try MSI-X */

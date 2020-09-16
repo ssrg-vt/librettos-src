@@ -1,9 +1,3 @@
-commit 6ee7032bc79c832eb9ab7b36640661b1c21252dc
-Author: Ruslan Nikolaev <rnikola@vt.edu>
-Date:   Sat Dec 22 17:52:30 2018 -0500
-
-    kqueue patch
-
 diff --git a/share/man/man9/kfilter_register.9 b/share/man/man9/kfilter_register.9
 index 43ba379b8c40..f405819140aa 100644
 --- a/share/man/man9/kfilter_register.9
@@ -17,33 +11,31 @@ index 43ba379b8c40..f405819140aa 100644
  .Ed
  .Pp
 diff --git a/sys/arch/amiga/dev/event.c b/sys/arch/amiga/dev/event.c
-index 30a6ae33e4a3..0e53c48f198c 100644
+index 153176189f3d..6eb76425a5b9 100644
 --- a/sys/arch/amiga/dev/event.c
 +++ b/sys/arch/amiga/dev/event.c
-@@ -191,7 +191,7 @@ filt_evread(struct knote *kn, long hint)
- }
- 
- static const struct filterops ev_filtops =
--	{ 1, NULL, filt_evrdetach, filt_evread };
-+	{ 1, NULL, filt_evrdetach, filt_evread, NULL };
+@@ -195,6 +195,7 @@ static const struct filterops ev_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_evrdetach,
+ 	.f_event = filt_evread,
++	.f_touch = NULL,
+ };
  
  int
- ev_kqfilter(struct evvar *ev, struct knote *kn)
 diff --git a/sys/arch/arc/dev/opms.c b/sys/arch/arc/dev/opms.c
-index 2791cdd6a426..df76a26ca003 100644
+index 222905f3cee3..aa20ab9f43c9 100644
 --- a/sys/arch/arc/dev/opms.c
 +++ b/sys/arch/arc/dev/opms.c
-@@ -473,7 +473,7 @@ filt_opmsread(struct knote *kn, long hint)
- }
- 
- static const struct filterops opmsread_filtops =
--	{ 1, NULL, filt_opmsrdetach, filt_opmsread };
-+	{ 1, NULL, filt_opmsrdetach, filt_opmsread, NULL };
+@@ -477,6 +477,7 @@ static const struct filterops opmsread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_opmsrdetach,
+ 	.f_event = filt_opmsread,
++	.f_touch = NULL,
+ };
  
  int
- opmskqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/arch/arm/xscale/pxa2x0_apm.c b/sys/arch/arm/xscale/pxa2x0_apm.c
-index f27b56901f82..3910aa3273dd 100644
+index f27b56901f82..7a9d987d3e1f 100644
 --- a/sys/arch/arm/xscale/pxa2x0_apm.c
 +++ b/sys/arch/arm/xscale/pxa2x0_apm.c
 @@ -105,7 +105,7 @@ int	filt_apmread(struct knote *kn, long hint);
@@ -51,76 +43,87 @@ index f27b56901f82..3910aa3273dd 100644
  
  struct filterops apmread_filtops =
 -	{ 1, NULL, filt_apmrdetach, filt_apmread};
-+	{ 1, NULL, filt_apmrdetach, filt_apmread, NULL};
++	{ 1, NULL, filt_apmrdetach, filt_apmread, NULL };
  #endif
  
  /*
 diff --git a/sys/arch/atari/dev/event.c b/sys/arch/atari/dev/event.c
-index 1db501e53c93..85ec6bb8f05e 100644
+index ca325c187319..4b2077a02ee8 100644
 --- a/sys/arch/atari/dev/event.c
 +++ b/sys/arch/atari/dev/event.c
-@@ -190,7 +190,7 @@ filt_evread(struct knote *kn, long hint)
- }
- 
- static const struct filterops ev_filtops =
--	{ 1, NULL, filt_evrdetach, filt_evread };
-+	{ 1, NULL, filt_evrdetach, filt_evread, NULL };
+@@ -194,6 +194,7 @@ static const struct filterops ev_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_evrdetach,
+ 	.f_event = filt_evread,
++	.f_touch = NULL,
+ };
  
  int
- ev_kqfilter(struct evvar *ev, struct knote *kn)
 diff --git a/sys/arch/landisk/dev/button.c b/sys/arch/landisk/dev/button.c
-index d73e4fd18f6f..a97019db54bd 100644
+index 1dc52c0d3af9..98bda5264e42 100644
 --- a/sys/arch/landisk/dev/button.c
 +++ b/sys/arch/landisk/dev/button.c
-@@ -313,10 +313,10 @@ filt_btn_read(struct knote *kn, long hint)
- }
+@@ -317,6 +317,7 @@ static const struct filterops btn_read_filtops = {
+     .f_attach = NULL,
+     .f_detach = filt_btn_rdetach,
+     .f_event = filt_btn_read,
++	.f_touch = NULL,
+ };
  
- static const struct filterops btn_read_filtops =
--    { 1, NULL, filt_btn_rdetach, filt_btn_read };
-+    { 1, NULL, filt_btn_rdetach, filt_btn_read, NULL };
- 
- static const struct filterops btn_write_filtops =
--    { 1, NULL, filt_btn_rdetach, filt_seltrue };
-+    { 1, NULL, filt_btn_rdetach, filt_seltrue, NULL };
+ static const struct filterops btn_write_filtops = {
+@@ -324,6 +325,7 @@ static const struct filterops btn_write_filtops = {
+     .f_attach = NULL,
+     .f_detach = filt_btn_rdetach,
+     .f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- btnkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/arch/mac68k/dev/aed.c b/sys/arch/mac68k/dev/aed.c
-index 741700a0ac93..cfee52548037 100644
+index a0e3b0eacfb7..45352e4c30a8 100644
 --- a/sys/arch/mac68k/dev/aed.c
 +++ b/sys/arch/mac68k/dev/aed.c
-@@ -598,10 +598,10 @@ filt_aedread(struct knote *kn, long hint)
- }
+@@ -602,6 +602,7 @@ static const struct filterops aedread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_aedrdetach,
+ 	.f_event = filt_aedread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops aedread_filtops =
--	{ 1, NULL, filt_aedrdetach, filt_aedread };
-+	{ 1, NULL, filt_aedrdetach, filt_aedread, NULL };
- 
- static const struct filterops aed_seltrue_filtops =
--	{ 1, NULL, filt_aedrdetach, filt_seltrue };
-+	{ 1, NULL, filt_aedrdetach, filt_seltrue, NULL };
+ static const struct filterops aed_seltrue_filtops = {
+@@ -609,6 +610,7 @@ static const struct filterops aed_seltrue_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_aedrdetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- aedkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/arch/macppc/dev/aed.c b/sys/arch/macppc/dev/aed.c
-index 211f1385d943..dae26d110727 100644
+index eb1551d68c55..21f6256ccf38 100644
 --- a/sys/arch/macppc/dev/aed.c
 +++ b/sys/arch/macppc/dev/aed.c
-@@ -603,10 +603,10 @@ filt_aedread(struct knote *kn, long hint)
- }
+@@ -606,14 +606,16 @@ static const struct filterops aedread_filtops = {
+ 	.f_isfd = 1,
+ 	.f_attach = NULL,
+ 	.f_detach = filt_aedrdetach,
+-	.f_event = filt_aedread
++	.f_event = filt_aedread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops aedread_filtops =
--	{ 1, NULL, filt_aedrdetach, filt_aedread };
-+	{ 1, NULL, filt_aedrdetach, filt_aedread, NULL };
- 
- static const struct filterops aed_seltrue_filtops =
--	{ 1, NULL, filt_aedrdetach, filt_seltrue };
-+	{ 1, NULL, filt_aedrdetach, filt_seltrue, NULL };
+ static const struct filterops aed_seltrue_filtops = {
+ 	.f_isfd = 1,
+ 	.f_attach = NULL,
+ 	.f_detach = filt_aedrdetach,
+-	.f_event = filt_seltrue
++	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- aedkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/arch/macppc/dev/apm.c b/sys/arch/macppc/dev/apm.c
-index c96f2aac2b2d..8250ff5898c9 100644
+index c96f2aac2b2d..db515f309690 100644
 --- a/sys/arch/macppc/dev/apm.c
 +++ b/sys/arch/macppc/dev/apm.c
 @@ -432,7 +432,7 @@ filt_apmread(struct knote *kn, long hint)
@@ -128,12 +131,12 @@ index c96f2aac2b2d..8250ff5898c9 100644
  
  static struct filterops apmread_filtops =
 -	{ 1, NULL, filt_apmrdetach, filt_apmread};
-+	{ 1, NULL, filt_apmrdetach, filt_apmread, NULL};
++	{ 1, NULL, filt_apmrdetach, filt_apmread, NULL };
  
  int
  apmkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/arch/mips/ralink/ralink_gpio.c b/sys/arch/mips/ralink/ralink_gpio.c
-index 28a0698eea69..ce934aed1609 100644
+index 310b5c7bb47f..104802bb43cb 100644
 --- a/sys/arch/mips/ralink/ralink_gpio.c
 +++ b/sys/arch/mips/ralink/ralink_gpio.c
 @@ -498,7 +498,8 @@ static struct filterops app_fops = {
@@ -147,470 +150,479 @@ index 28a0698eea69..ce934aed1609 100644
  static struct callout led_tick_callout;
  static int gpio_driver_blink_leds = 1;
 diff --git a/sys/arch/sandpoint/sandpoint/satmgr.c b/sys/arch/sandpoint/sandpoint/satmgr.c
-index 87ac1dcb42b1..3e2fd8627f10 100644
+index c3b049d6a075..f22c85989d36 100644
 --- a/sys/arch/sandpoint/sandpoint/satmgr.c
 +++ b/sys/arch/sandpoint/sandpoint/satmgr.c
-@@ -603,7 +603,7 @@ filt_read(struct knote *kn, long hint)
- }
- 
- static const struct filterops read_filtops = {
--	1, NULL, filt_rdetach, filt_read
-+	1, NULL, filt_rdetach, filt_read, NULL
+@@ -607,6 +607,7 @@ static const struct filterops read_filtops ={
+ 	.f_attach = NULL,
+ 	.f_detach = filt_rdetach,
+ 	.f_event = filt_read,
++	.f_touch = NULL,
  };
  
  static int
 diff --git a/sys/arch/shark/shark/opms.c b/sys/arch/shark/shark/opms.c
-index 65031227695a..4889798daf2e 100644
+index 0790eae75e58..ad908afc814e 100644
 --- a/sys/arch/shark/shark/opms.c
 +++ b/sys/arch/shark/shark/opms.c
-@@ -980,7 +980,7 @@ filt_opmsread(struct knote *kn, long hint)
- }
- 
- static const struct filterops opmsread_filtops =
--	{ 1, NULL, filt_opmsrdetach, filt_opmsread };
-+	{ 1, NULL, filt_opmsrdetach, filt_opmsread, NULL };
+@@ -984,6 +984,7 @@ static const struct filterops opmsread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_opmsrdetach,
+ 	.f_event = filt_opmsread,
++	.f_touch = NULL,
+ };
  
  int
- opmskqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/arch/sparc/dev/tctrl.c b/sys/arch/sparc/dev/tctrl.c
-index 839b515f9542..be50f4f493b5 100644
+index 588f7bd670c8..098ac8cca66c 100644
 --- a/sys/arch/sparc/dev/tctrl.c
 +++ b/sys/arch/sparc/dev/tctrl.c
-@@ -1231,7 +1231,7 @@ filt_tctrlread(struct knote *kn, long hint)
- }
- 
- static const struct filterops tctrlread_filtops =
--	{ 1, NULL, filt_tctrlrdetach, filt_tctrlread };
-+	{ 1, NULL, filt_tctrlrdetach, filt_tctrlread, NULL };
+@@ -1235,6 +1235,7 @@ static const struct filterops tctrlread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_tctrlrdetach,
+ 	.f_event = filt_tctrlread,
++	.f_touch = NULL,
+ };
  
  int
- tctrlkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/arch/x68k/dev/event.c b/sys/arch/x68k/dev/event.c
-index 5f4788c929db..604760445a70 100644
+index 9d96ae9fb221..68e6232bf902 100644
 --- a/sys/arch/x68k/dev/event.c
 +++ b/sys/arch/x68k/dev/event.c
-@@ -217,7 +217,7 @@ filt_evread(struct knote *kn, long hint)
- }
- 
- static const struct filterops ev_filtops =
--	{ 1, NULL, filt_evrdetach, filt_evread };
-+	{ 1, NULL, filt_evrdetach, filt_evread, NULL };
+@@ -221,6 +221,7 @@ static const struct filterops ev_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_evrdetach,
+ 	.f_event = filt_evread,
++	.f_touch = NULL,
+ };
  
  int
- ev_kqfilter(struct evvar *ev, struct knote *kn)
 diff --git a/sys/coda/coda_psdev.c b/sys/coda/coda_psdev.c
-index edba814da931..30a56a54c10d 100644
+index c42d1db98bd0..745d2985b7d2 100644
 --- a/sys/coda/coda_psdev.c
 +++ b/sys/coda/coda_psdev.c
-@@ -487,7 +487,7 @@ filt_vc_nb_read(struct knote *kn, long hint)
- }
- 
- static const struct filterops vc_nb_read_filtops =
--	{ 1, NULL, filt_vc_nb_detach, filt_vc_nb_read };
-+	{ 1, NULL, filt_vc_nb_detach, filt_vc_nb_read, NULL };
+@@ -491,6 +491,7 @@ static const struct filterops vc_nb_read_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_vc_nb_detach,
+ 	.f_event = filt_vc_nb_read,
++	.f_touch = NULL,
+ };
  
  int
- vc_nb_kqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/apm/apm.c b/sys/dev/apm/apm.c
-index ad54c2a11429..07b71bcbcd26 100644
+index 04e5c541308e..794ae0eee7f0 100644
 --- a/sys/dev/apm/apm.c
 +++ b/sys/dev/apm/apm.c
-@@ -884,7 +884,7 @@ filt_apmread(struct knote *kn, long hint)
- }
- 
- static const struct filterops apmread_filtops =
--	{ 1, NULL, filt_apmrdetach, filt_apmread };
-+	{ 1, NULL, filt_apmrdetach, filt_apmread, NULL };
+@@ -888,6 +888,7 @@ static const struct filterops apmread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_apmrdetach,
+ 	.f_event = filt_apmread,
++	.f_touch = NULL,
+ };
  
  int
- apmkqfilter(dev_t dev, struct knote *kn)
-diff --git a/sys/dev/audio.c b/sys/dev/audio.c
-index 7a11eeee06f1..216445c0412f 100644
---- a/sys/dev/audio.c
-+++ b/sys/dev/audio.c
-@@ -3421,7 +3421,7 @@ filt_audioread(struct knote *kn, long hint)
- }
- 
- static const struct filterops audioread_filtops =
--	{ 1, NULL, filt_audiordetach, filt_audioread };
-+	{ 1, NULL, filt_audiordetach, filt_audioread, NULL };
+diff --git a/sys/dev/audio/audio.c b/sys/dev/audio/audio.c
+index 8ad206312503..d434fdcb702f 100644
+--- a/sys/dev/audio/audio.c
++++ b/sys/dev/audio/audio.c
+@@ -2831,6 +2831,7 @@ static const struct filterops audioread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_audioread_detach,
+ 	.f_event = filt_audioread_event,
++	.f_touch = NULL,
+ };
  
  static void
- filt_audiowdetach(struct knote *kn)
-@@ -3466,7 +3466,7 @@ filt_audiowrite(struct knote *kn, long hint)
- }
+@@ -2878,6 +2879,7 @@ static const struct filterops audiowrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_audiowrite_detach,
+ 	.f_event = filt_audiowrite_event,
++	.f_touch = NULL,
+ };
  
- static const struct filterops audiowrite_filtops =
--	{ 1, NULL, filt_audiowdetach, filt_audiowrite };
-+	{ 1, NULL, filt_audiowdetach, filt_audiowrite, NULL };
- 
- int
- audio_kqfilter(struct audio_chan *chan, struct knote *kn)
+ static void
 diff --git a/sys/dev/hpc/apm/apmdev.c b/sys/dev/hpc/apm/apmdev.c
-index 00331fa032f4..c75d6d9bece4 100644
+index 6b182349ef53..917cd8a10a36 100644
 --- a/sys/dev/hpc/apm/apmdev.c
 +++ b/sys/dev/hpc/apm/apmdev.c
-@@ -926,7 +926,7 @@ filt_apmread(struct knote *kn, long hint)
- }
- 
- static const struct filterops apmread_filtops =
--	{ 1, NULL, filt_apmrdetach, filt_apmread };
-+	{ 1, NULL, filt_apmrdetach, filt_apmread, NULL };
+@@ -929,6 +929,7 @@ static const struct filterops apmread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_apmrdetach,
+ 	.f_event = filt_apmread,
++	.f_touch = NULL,
+ };
  
  int
- apmdevkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/ir/irframe_tty.c b/sys/dev/ir/irframe_tty.c
-index bc9e14c98dda..602ccd591016 100644
+index e3c70dd752fa..6bf37dfe81af 100644
 --- a/sys/dev/ir/irframe_tty.c
 +++ b/sys/dev/ir/irframe_tty.c
-@@ -824,9 +824,9 @@ filt_irframetwrite(struct knote *kn, long hint)
- }
+@@ -834,6 +834,7 @@ static const struct filterops irframetread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_irframetrdetach,
+ 	.f_event = filt_irframetread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops irframetread_filtops =
--	{ 1, NULL, filt_irframetrdetach, filt_irframetread };
-+	{ 1, NULL, filt_irframetrdetach, filt_irframetread, NULL };
- static const struct filterops irframetwrite_filtops =
--	{ 1, NULL, filt_irframetwdetach, filt_irframetwrite };
-+	{ 1, NULL, filt_irframetwdetach, filt_irframetwrite, NULL };
- 
- int
- irframet_kqfilter(void *h, struct knote *kn)
-diff --git a/sys/dev/isa/satlink.c b/sys/dev/isa/satlink.c
-index a4a15d1e995b..490c9ae1ebc7 100644
---- a/sys/dev/isa/satlink.c
-+++ b/sys/dev/isa/satlink.c
-@@ -457,10 +457,10 @@ filt_satlinkread(struct knote *kn, long hint)
- }
- 
- static const struct filterops satlinkread_filtops =
--	{ 1, NULL, filt_satlinkrdetach, filt_satlinkread };
-+	{ 1, NULL, filt_satlinkrdetach, filt_satlinkread, NULL };
- 
- static const struct filterops satlink_seltrue_filtops =
--	{ 1, NULL, filt_satlinkrdetach, filt_seltrue };
-+	{ 1, NULL, filt_satlinkrdetach, filt_seltrue, NULL };
+ static const struct filterops irframetwrite_filtops = {
+@@ -841,6 +842,7 @@ static const struct filterops irframetwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_irframetwdetach,
+ 	.f_event = filt_irframetwrite,
++	.f_touch = NULL,
+ };
  
  int
- satlinkkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/midi.c b/sys/dev/midi.c
-index 9c3591374ac0..0382d06b4308 100644
+index e3d4533b9c75..009511b7df7a 100644
 --- a/sys/dev/midi.c
 +++ b/sys/dev/midi.c
-@@ -1764,7 +1764,7 @@ filt_midiread(struct knote *kn, long hint)
- }
- 
- static const struct filterops midiread_filtops =
--	{ 1, NULL, filt_midirdetach, filt_midiread };
-+	{ 1, NULL, filt_midirdetach, filt_midiread, NULL };
+@@ -1768,6 +1768,7 @@ static const struct filterops midiread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_midirdetach,
+ 	.f_event = filt_midiread,
++	.f_touch = NULL,
+ };
  
  static void
- filt_midiwdetach(struct knote *kn)
-@@ -1808,7 +1808,7 @@ filt_midiwrite(struct knote *kn, long hint)
- }
- 
- static const struct filterops midiwrite_filtops =
--	{ 1, NULL, filt_midiwdetach, filt_midiwrite };
-+	{ 1, NULL, filt_midiwdetach, filt_midiwrite, NULL };
+@@ -1816,6 +1817,7 @@ static const struct filterops midiwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_midiwdetach,
+ 	.f_event = filt_midiwrite,
++	.f_touch = NULL,
+ };
  
  int
- midikqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/pci/oboe.c b/sys/dev/pci/oboe.c
-index d1332779792d..64b6981254e7 100644
+index db77bcc30c58..90fab594ed6e 100644
 --- a/sys/dev/pci/oboe.c
 +++ b/sys/dev/pci/oboe.c
-@@ -494,9 +494,9 @@ filt_oboewdetach(struct knote *kn)
- }
+@@ -499,6 +499,7 @@ static const struct filterops oboeread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_oboerdetach,
+ 	.f_event = filt_oboeread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops oboeread_filtops =
--	{ 1, NULL, filt_oboerdetach, filt_oboeread };
-+	{ 1, NULL, filt_oboerdetach, filt_oboeread, NULL };
- static const struct filterops oboewrite_filtops =
--	{ 1, NULL, filt_oboewdetach, filt_seltrue };
-+	{ 1, NULL, filt_oboewdetach, filt_seltrue, NULL };
+ static const struct filterops oboewrite_filtops = {
+@@ -506,6 +507,7 @@ static const struct filterops oboewrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_oboewdetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  static int
- oboe_kqfilter(void *h, struct knote *kn)
 diff --git a/sys/dev/putter/putter.c b/sys/dev/putter/putter.c
-index cd2132e38d0a..5b7eb3ced5c6 100644
+index 7d4f57d30f6a..9997643ae03e 100644
 --- a/sys/dev/putter/putter.c
 +++ b/sys/dev/putter/putter.c
-@@ -491,7 +491,7 @@ filt_putter(struct knote *kn, long hint)
- }
- 
- static const struct filterops putter_filtops =
--	{ 1, NULL, filt_putterdetach, filt_putter };
-+	{ 1, NULL, filt_putterdetach, filt_putter, NULL };
+@@ -496,6 +496,7 @@ static const struct filterops putter_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_putterdetach,
+ 	.f_event = filt_putter,
++	.f_touch = NULL,
+ };
  
  static int
- putter_fop_kqfilter(file_t *fp, struct knote *kn)
 diff --git a/sys/dev/qbus/qd.c b/sys/dev/qbus/qd.c
-index c27b30a1e77f..ea78ec5f71a4 100644
+index 9a36533adf92..431949a601ed 100644
 --- a/sys/dev/qbus/qd.c
 +++ b/sys/dev/qbus/qd.c
-@@ -1581,10 +1581,10 @@ filt_qdwrite(struct knote *kn, long hint)
- }
+@@ -1585,6 +1585,7 @@ static const struct filterops qdread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_qdrdetach,
+ 	.f_event = filt_qdread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops qdread_filtops =
--	{ 1, NULL, filt_qdrdetach, filt_qdread };
-+	{ 1, NULL, filt_qdrdetach, filt_qdread, NULL };
- 
- static const struct filterops qdwrite_filtops =
--	{ 1, NULL, filt_qdrdetach, filt_qdwrite };
-+	{ 1, NULL, filt_qdrdetach, filt_qdwrite, NULL };
+ static const struct filterops qdwrite_filtops = {
+@@ -1592,6 +1593,7 @@ static const struct filterops qdwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_qdrdetach,
+ 	.f_event = filt_qdwrite,
++	.f_touch = NULL,
+ };
  
  int
- qdkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/sbus/bpp.c b/sys/dev/sbus/bpp.c
-index 634ae158a68a..fe9fb37e4485 100644
+index 52c6e2092a9b..215e9ea961ec 100644
 --- a/sys/dev/sbus/bpp.c
 +++ b/sys/dev/sbus/bpp.c
-@@ -521,7 +521,7 @@ filt_bppread(struct knote *kn, long hint)
- }
- 
- static const struct filterops bppread_filtops =
--	{ 1, NULL, filt_bpprdetach, filt_bppread };
-+	{ 1, NULL, filt_bpprdetach, filt_bppread, NULL };
+@@ -525,6 +525,7 @@ static const struct filterops bppread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_bpprdetach,
+ 	.f_event = filt_bppread,
++	.f_touch = NULL,
+ };
  
  static void
- filt_bppwdetach(struct knote *kn)
-@@ -547,7 +547,7 @@ filt_bpfwrite(struct knote *kn, long hint)
- }
- 
- static const struct filterops bppwrite_filtops =
--	{ 1, NULL, filt_bppwdetach, filt_bpfwrite };
-+	{ 1, NULL, filt_bppwdetach, filt_bpfwrite, NULL };
+@@ -555,6 +556,7 @@ static const struct filterops bppwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_bppwdetach,
+ 	.f_event = filt_bpfwrite,
++	.f_touch = NULL,
+ };
  
  int
- bppkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/scsipi/ch.c b/sys/dev/scsipi/ch.c
-index dcc8ae9731a8..5be1c33e5da5 100644
+index 208aa77e2886..df758d73b200 100644
 --- a/sys/dev/scsipi/ch.c
 +++ b/sys/dev/scsipi/ch.c
-@@ -488,10 +488,10 @@ filt_chread(struct knote *kn, long hint)
- }
+@@ -492,6 +492,7 @@ static const struct filterops chread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_chdetach,
+ 	.f_event = filt_chread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops chread_filtops =
--	{ 1, NULL, filt_chdetach, filt_chread };
-+	{ 1, NULL, filt_chdetach, filt_chread, NULL };
- 
- static const struct filterops chwrite_filtops =
--	{ 1, NULL, filt_chdetach, filt_seltrue };
-+	{ 1, NULL, filt_chdetach, filt_seltrue, NULL };
+ static const struct filterops chwrite_filtops = {
+@@ -499,6 +500,7 @@ static const struct filterops chwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_chdetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  static int
- chkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/sequencer.c b/sys/dev/sequencer.c
-index 2e673e262beb..48fa83b7f6fc 100644
+index b46c1a500d1a..865b4c862d14 100644
 --- a/sys/dev/sequencer.c
 +++ b/sys/dev/sequencer.c
-@@ -913,7 +913,7 @@ filt_sequencerread(struct knote *kn, long hint)
- }
- 
- static const struct filterops sequencerread_filtops =
--	{ 1, NULL, filt_sequencerrdetach, filt_sequencerread };
-+	{ 1, NULL, filt_sequencerrdetach, filt_sequencerread, NULL };
+@@ -931,6 +931,7 @@ static const struct filterops sequencerread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_sequencerrdetach,
+ 	.f_event = filt_sequencerread,
++	.f_touch = NULL,
+ };
  
  static void
- filt_sequencerwdetach(struct knote *kn)
-@@ -947,7 +947,7 @@ filt_sequencerwrite(struct knote *kn, long hint)
- }
- 
- static const struct filterops sequencerwrite_filtops =
--	{ 1, NULL, filt_sequencerwdetach, filt_sequencerwrite };
-+	{ 1, NULL, filt_sequencerwdetach, filt_sequencerwrite, NULL };
+@@ -969,6 +970,7 @@ static const struct filterops sequencerwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_sequencerwdetach,
+ 	.f_event = filt_sequencerwrite,
++	.f_touch = NULL,
+ };
  
  static int
- sequencerkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/sun/event.c b/sys/dev/sun/event.c
-index 4cd4934f1223..f829b28a76ac 100644
+index 60504f9cc92f..4a2ba12116ff 100644
 --- a/sys/dev/sun/event.c
 +++ b/sys/dev/sun/event.c
-@@ -197,7 +197,7 @@ filt_evread(struct knote *kn, long hint)
- }
- 
- static const struct filterops ev_filtops =
--	{ 1, NULL, filt_evrdetach, filt_evread };
-+	{ 1, NULL, filt_evrdetach, filt_evread, NULL };
+@@ -201,6 +201,7 @@ static const struct filterops ev_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_evrdetach,
+ 	.f_event = filt_evread,
++	.f_touch = NULL,
+ };
  
  int
- ev_kqfilter(struct evvar *ev, struct knote *kn)
 diff --git a/sys/dev/sysmon/sysmon_power.c b/sys/dev/sysmon/sysmon_power.c
-index 4d9f4fe6de22..7149078ddf1a 100644
+index 20c4d71784f8..71e13b14cf0f 100644
 --- a/sys/dev/sysmon/sysmon_power.c
 +++ b/sys/dev/sysmon/sysmon_power.c
-@@ -558,10 +558,10 @@ filt_sysmon_power_read(struct knote *kn, long hint)
- }
+@@ -559,6 +559,7 @@ static const struct filterops sysmon_power_read_filtops = {
+     .f_attach = NULL,
+     .f_detach = filt_sysmon_power_rdetach,
+     .f_event = filt_sysmon_power_read,
++	.f_touch = NULL,
+ };
  
- static const struct filterops sysmon_power_read_filtops =
--    { 1, NULL, filt_sysmon_power_rdetach, filt_sysmon_power_read };
-+    { 1, NULL, filt_sysmon_power_rdetach, filt_sysmon_power_read, NULL };
- 
- static const struct filterops sysmon_power_write_filtops =
--    { 1, NULL, filt_sysmon_power_rdetach, filt_seltrue };
-+    { 1, NULL, filt_sysmon_power_rdetach, filt_seltrue, NULL };
+ static const struct filterops sysmon_power_write_filtops = {
+@@ -566,6 +567,7 @@ static const struct filterops sysmon_power_write_filtops = {
+     .f_attach = NULL,
+     .f_detach = filt_sysmon_power_rdetach,
+     .f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  /*
-  * sysmonkqfilter_power:
 diff --git a/sys/dev/usb/udsir.c b/sys/dev/usb/udsir.c
-index 999c5f794726..b33afaaa6f10 100644
+index 35239a97decb..bcb4d0588558 100644
 --- a/sys/dev/usb/udsir.c
 +++ b/sys/dev/usb/udsir.c
-@@ -663,9 +663,9 @@ udsir_poll(void *h, int events, struct lwp *l)
- }
+@@ -667,6 +667,7 @@ static const struct filterops udsirread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_udsirrdetach,
+ 	.f_event = filt_udsirread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops udsirread_filtops =
--	{ 1, NULL, filt_udsirrdetach, filt_udsirread };
-+	{ 1, NULL, filt_udsirrdetach, filt_udsirread, NULL };
- static const struct filterops udsirwrite_filtops =
--	{ 1, NULL, filt_udsirwdetach, filt_udsirwrite };
-+	{ 1, NULL, filt_udsirwdetach, filt_udsirwrite, NULL };
+ static const struct filterops udsirwrite_filtops = {
+@@ -674,6 +675,7 @@ static const struct filterops udsirwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_udsirwdetach,
+ 	.f_event = filt_udsirwrite,
++	.f_touch = NULL,
+ };
  
  static int
- udsir_kqfilter(void *h, struct knote *kn)
 diff --git a/sys/dev/usb/ugen.c b/sys/dev/usb/ugen.c
-index e345ba0116a8..56702ec6eaf3 100644
+index 0ea8f302195d..63b7698755de 100644
 --- a/sys/dev/usb/ugen.c
 +++ b/sys/dev/usb/ugen.c
-@@ -2017,16 +2017,16 @@ filt_ugenwrite_bulk(struct knote *kn, long hint)
- }
+@@ -2075,6 +2075,7 @@ static const struct filterops ugenread_intr_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ugenrdetach,
+ 	.f_event = filt_ugenread_intr,
++	.f_touch = NULL,
+ };
  
- static const struct filterops ugenread_intr_filtops =
--	{ 1, NULL, filt_ugenrdetach, filt_ugenread_intr };
-+	{ 1, NULL, filt_ugenrdetach, filt_ugenread_intr, NULL };
+ static const struct filterops ugenread_isoc_filtops = {
+@@ -2082,6 +2083,7 @@ static const struct filterops ugenread_isoc_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ugenrdetach,
+ 	.f_event = filt_ugenread_isoc,
++	.f_touch = NULL,
+ };
  
- static const struct filterops ugenread_isoc_filtops =
--	{ 1, NULL, filt_ugenrdetach, filt_ugenread_isoc };
-+	{ 1, NULL, filt_ugenrdetach, filt_ugenread_isoc, NULL };
+ static const struct filterops ugenread_bulk_filtops = {
+@@ -2089,6 +2091,7 @@ static const struct filterops ugenread_bulk_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ugenrdetach,
+ 	.f_event = filt_ugenread_bulk,
++	.f_touch = NULL,
+ };
  
- static const struct filterops ugenread_bulk_filtops =
--	{ 1, NULL, filt_ugenrdetach, filt_ugenread_bulk };
-+	{ 1, NULL, filt_ugenrdetach, filt_ugenread_bulk, NULL };
- 
- static const struct filterops ugenwrite_bulk_filtops =
--	{ 1, NULL, filt_ugenrdetach, filt_ugenwrite_bulk };
-+	{ 1, NULL, filt_ugenrdetach, filt_ugenwrite_bulk, NULL };
+ static const struct filterops ugenwrite_bulk_filtops = {
+@@ -2096,6 +2099,7 @@ static const struct filterops ugenwrite_bulk_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ugenrdetach,
+ 	.f_event = filt_ugenwrite_bulk,
++	.f_touch = NULL,
+ };
  
  int
- ugenkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/usb/uhid.c b/sys/dev/usb/uhid.c
-index 497a08595562..f08d8ce27271 100644
+index 31a12638bcba..2c3b897a42e2 100644
 --- a/sys/dev/usb/uhid.c
 +++ b/sys/dev/usb/uhid.c
-@@ -751,10 +751,10 @@ filt_uhidread(struct knote *kn, long hint)
- }
+@@ -772,6 +772,7 @@ static const struct filterops uhidread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_uhidrdetach,
+ 	.f_event = filt_uhidread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops uhidread_filtops =
--	{ 1, NULL, filt_uhidrdetach, filt_uhidread };
-+	{ 1, NULL, filt_uhidrdetach, filt_uhidread, NULL };
- 
- static const struct filterops uhid_seltrue_filtops =
--	{ 1, NULL, filt_uhidrdetach, filt_seltrue };
-+	{ 1, NULL, filt_uhidrdetach, filt_seltrue, NULL };
+ static const struct filterops uhid_seltrue_filtops = {
+@@ -779,6 +780,7 @@ static const struct filterops uhid_seltrue_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_uhidrdetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- uhidkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/usb/uirda.c b/sys/dev/usb/uirda.c
-index 0c03cb95617a..8f7153957c75 100644
+index 0d6f56681897..4391dd6a83a4 100644
 --- a/sys/dev/usb/uirda.c
 +++ b/sys/dev/usb/uirda.c
-@@ -641,9 +641,9 @@ filt_uirdawdetach(struct knote *kn)
- }
+@@ -645,6 +645,7 @@ static const struct filterops uirdaread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_uirdardetach,
+ 	.f_event = filt_uirdaread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops uirdaread_filtops =
--	{ 1, NULL, filt_uirdardetach, filt_uirdaread };
-+	{ 1, NULL, filt_uirdardetach, filt_uirdaread, NULL };
- static const struct filterops uirdawrite_filtops =
--	{ 1, NULL, filt_uirdawdetach, filt_seltrue };
-+	{ 1, NULL, filt_uirdawdetach, filt_seltrue, NULL };
+ static const struct filterops uirdawrite_filtops = {
+@@ -652,6 +653,7 @@ static const struct filterops uirdawrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_uirdawdetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- uirda_kqfilter(void *h, struct knote *kn)
 diff --git a/sys/dev/usb/usb.c b/sys/dev/usb/usb.c
-index 2f7b84051f31..d148d748c1a5 100644
+index 36361ff1b418..d3cda90cda08 100644
 --- a/sys/dev/usb/usb.c
 +++ b/sys/dev/usb/usb.c
-@@ -967,7 +967,7 @@ filt_usbread(struct knote *kn, long hint)
- }
- 
- static const struct filterops usbread_filtops =
--	{ 1, NULL, filt_usbrdetach, filt_usbread };
-+	{ 1, NULL, filt_usbrdetach, filt_usbread, NULL };
+@@ -951,6 +951,7 @@ static const struct filterops usbread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_usbrdetach,
+ 	.f_event = filt_usbread,
++	.f_touch = NULL,
+ };
  
  int
- usbkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/usb/uscanner.c b/sys/dev/usb/uscanner.c
-index 91fe0da348b6..4f70153650ea 100644
+index 299c34ea7ae3..8cf40cf85068 100644
 --- a/sys/dev/usb/uscanner.c
 +++ b/sys/dev/usb/uscanner.c
-@@ -677,7 +677,7 @@ filt_uscannerdetach(struct knote *kn)
- }
- 
- static const struct filterops uscanner_seltrue_filtops =
--	{ 1, NULL, filt_uscannerdetach, filt_seltrue };
-+	{ 1, NULL, filt_uscannerdetach, filt_seltrue, NULL };
+@@ -683,6 +683,7 @@ static const struct filterops uscanner_seltrue_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_uscannerdetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- uscannerkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/dev/usb/ustir.c b/sys/dev/usb/ustir.c
-index c47de5d63c64..8f0b5d6cfdce 100644
+index 20ac4de23495..60ba978f049d 100644
 --- a/sys/dev/usb/ustir.c
 +++ b/sys/dev/usb/ustir.c
-@@ -1088,9 +1088,9 @@ filt_ustirwrite(struct knote *kn, long hint)
- }
+@@ -1092,6 +1092,7 @@ static const struct filterops ustirread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ustirrdetach,
+ 	.f_event = filt_ustirread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops ustirread_filtops =
--	{ 1, NULL, filt_ustirrdetach, filt_ustirread };
-+	{ 1, NULL, filt_ustirrdetach, filt_ustirread, NULL };
- static const struct filterops ustirwrite_filtops =
--	{ 1, NULL, filt_ustirwdetach, filt_ustirwrite };
-+	{ 1, NULL, filt_ustirwdetach, filt_ustirwrite, NULL };
+ static const struct filterops ustirwrite_filtops = {
+@@ -1099,6 +1100,7 @@ static const struct filterops ustirwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ustirwdetach,
+ 	.f_event = filt_ustirwrite,
++	.f_touch = NULL,
+ };
  
  Static int
- ustir_kqfilter(void *h, struct knote *kn)
 diff --git a/sys/dev/wscons/wsevent.c b/sys/dev/wscons/wsevent.c
-index 2966dc409429..b25075db2951 100644
+index f6a4ce2a291e..0636cf87d38d 100644
 --- a/sys/dev/wscons/wsevent.c
 +++ b/sys/dev/wscons/wsevent.c
-@@ -341,7 +341,7 @@ filt_wseventread(struct knote *kn, long hint)
- }
- 
- static const struct filterops wsevent_filtops =
--	{ 1, NULL, filt_wseventrdetach, filt_wseventread };
-+	{ 1, NULL, filt_wseventrdetach, filt_wseventread, NULL };
+@@ -318,6 +318,7 @@ static const struct filterops wsevent_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_wseventrdetach,
+ 	.f_event = filt_wseventread,
++	.f_touch = NULL,
+ };
  
  int
- wsevent_kqfilter(struct wseventvar *ev, struct knote *kn)
-diff --git a/sys/external/bsd/drm2/drm/drm_drv.c b/sys/external/bsd/drm2/drm/drm_drv.c
-index 25e98b17551e..7327bf4753c4 100644
---- a/sys/external/bsd/drm2/drm/drm_drv.c
-+++ b/sys/external/bsd/drm2/drm/drm_drv.c
-@@ -511,7 +511,7 @@ static void	filt_drm_detach(struct knote *);
- static int	filt_drm_event(struct knote *, long);
- 
- static const struct filterops drm_filtops =
--	{ 1, NULL, filt_drm_detach, filt_drm_event };
-+	{ 1, NULL, filt_drm_detach, filt_drm_event, NULL };
+diff --git a/sys/external/bsd/drm2/drm/drm_cdevsw.c b/sys/external/bsd/drm2/drm/drm_cdevsw.c
+index 20073f5a5dc8..081846d903dd 100644
+--- a/sys/external/bsd/drm2/drm/drm_cdevsw.c
++++ b/sys/external/bsd/drm2/drm/drm_cdevsw.c
+@@ -390,6 +390,7 @@ static const struct filterops drm_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_drm_detach,
+ 	.f_event = filt_drm_event,
++	.f_touch = NULL,
+ };
  
  static int
- drm_kqfilter(struct file *fp, struct knote *kn)
 diff --git a/sys/fs/smbfs/smbfs_kq.c b/sys/fs/smbfs/smbfs_kq.c
-index 5430c3031694..a719b6fc9735 100644
+index 8f9bec2380b2..6aa2f6bb8788 100644
 --- a/sys/fs/smbfs/smbfs_kq.c
 +++ b/sys/fs/smbfs/smbfs_kq.c
-@@ -410,9 +410,9 @@ filt_smbfsvnode(struct knote *kn, long hint)
- }
+@@ -414,6 +414,7 @@ static const struct filterops smbfsread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_smbfsdetach,
+ 	.f_event = filt_smbfsread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops smbfsread_filtops =
--	{ 1, NULL, filt_smbfsdetach, filt_smbfsread };
-+	{ 1, NULL, filt_smbfsdetach, filt_smbfsread, NULL };
- static const struct filterops smbfsvnode_filtops =
--	{ 1, NULL, filt_smbfsdetach, filt_smbfsvnode };
-+	{ 1, NULL, filt_smbfsdetach, filt_smbfsvnode, NULL };
+ static const struct filterops smbfsvnode_filtops = {
+@@ -421,6 +422,7 @@ static const struct filterops smbfsvnode_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_smbfsdetach,
+ 	.f_event = filt_smbfsvnode,
++	.f_touch = NULL,
+ };
  
  int
- smbfs_kqfilter(void *v)
 diff --git a/sys/kern/kern_event.c b/sys/kern/kern_event.c
-index 2ecbc1d7c00d..e4611dc1c8ed 100644
+index 032695237027..759902bb4f8a 100644
 --- a/sys/kern/kern_event.c
 +++ b/sys/kern/kern_event.c
 @@ -31,6 +31,7 @@
@@ -621,46 +633,74 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
   * All rights reserved.
   *
   * Redistribution and use in source and binary forms, with or without
-@@ -106,6 +107,10 @@ static void	filt_timerexpire(void *x);
- static int	filt_timerattach(struct knote *);
- static void	filt_timerdetach(struct knote *);
- static int	filt_timer(struct knote *, long hint);
+@@ -109,6 +110,10 @@ static int	filt_timer(struct knote *, long hint);
+ static int	filt_fsattach(struct knote *kn);
+ static void	filt_fsdetach(struct knote *kn);
+ static int	filt_fs(struct knote *kn, long hint);
 +static int	filt_userattach(struct knote *);
 +static void	filt_userdetach(struct knote *);
 +static int	filt_user(struct knote *, long hint);
 +static void	filt_usertouch(struct knote *, struct kevent *, long type);
  
  static const struct fileops kqueueops = {
- 	.fo_read = (void *)enxio,
-@@ -120,13 +125,15 @@ static const struct fileops kqueueops = {
+ 	.fo_name = "kqueue",
+@@ -128,6 +133,7 @@ static const struct filterops kqread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_kqdetach,
+ 	.f_event = filt_kqueue,
++	.f_touch = NULL,
  };
  
- static const struct filterops kqread_filtops =
--	{ 1, NULL, filt_kqdetach, filt_kqueue };
-+	{ 1, NULL, filt_kqdetach, filt_kqueue, NULL };
- static const struct filterops proc_filtops =
--	{ 0, filt_procattach, filt_procdetach, filt_proc };
-+	{ 0, filt_procattach, filt_procdetach, filt_proc, NULL };
- static const struct filterops file_filtops =
--	{ 1, filt_fileattach, NULL, NULL };
-+	{ 1, filt_fileattach, NULL, NULL, NULL };
- static const struct filterops timer_filtops =
--	{ 0, filt_timerattach, filt_timerdetach, filt_timer };
-+	{ 0, filt_timerattach, filt_timerdetach, filt_timer, NULL };
-+static const struct filterops user_filtops =
-+	{ 0, filt_userattach, filt_userdetach, filt_user, filt_usertouch };
+ static const struct filterops proc_filtops = {
+@@ -135,6 +141,7 @@ static const struct filterops proc_filtops = {
+ 	.f_attach = filt_procattach,
+ 	.f_detach = filt_procdetach,
+ 	.f_event = filt_proc,
++	.f_touch = NULL,
+ };
+ 
+ static const struct filterops file_filtops = {
+@@ -142,6 +149,7 @@ static const struct filterops file_filtops = {
+ 	.f_attach = filt_fileattach,
+ 	.f_detach = NULL,
+ 	.f_event = NULL,
++	.f_touch = NULL,
+ };
+ 
+ static const struct filterops timer_filtops = {
+@@ -149,6 +157,7 @@ static const struct filterops timer_filtops = {
+ 	.f_attach = filt_timerattach,
+ 	.f_detach = filt_timerdetach,
+ 	.f_event = filt_timer,
++	.f_touch = NULL,
+ };
+ 
+ static const struct filterops fs_filtops = {
+@@ -156,6 +165,15 @@ static const struct filterops fs_filtops = {
+ 	.f_attach = filt_fsattach,
+ 	.f_detach = filt_fsdetach,
+ 	.f_event = filt_fs,
++	.f_touch = NULL,
++};
++
++static const struct filterops user_filtops = {
++	.f_isfd = 0,
++	.f_attach = filt_userattach,
++	.f_detach = filt_userdetach,
++	.f_event = filt_user,
++	.f_touch = filt_usertouch,
+ };
  
  static u_int	kq_ncallouts = 0;
- static int	kq_calloutmax = (4 * 1024);
-@@ -161,6 +168,7 @@ static struct kfilter sys_kfilters[] = {
- 	{ "EVFILT_PROC",	EVFILT_PROC,	0, &proc_filtops, 0 },
+@@ -192,6 +210,7 @@ static struct kfilter sys_kfilters[] = {
  	{ "EVFILT_SIGNAL",	EVFILT_SIGNAL,	0, &sig_filtops, 0 },
  	{ "EVFILT_TIMER",	EVFILT_TIMER,	0, &timer_filtops, 0 },
+ 	{ "EVFILT_FS",		EVFILT_FS,	0, &fs_filtops, 0 },
 +	{ "EVFILT_USER",	EVFILT_USER,	0, &user_filtops, 0 },
  	{ NULL,			0,		0, NULL, 0 },
  };
  
-@@ -689,6 +697,106 @@ filt_timer(struct knote *kn, long hint)
+@@ -776,6 +795,106 @@ filt_fs(struct knote *kn, long hint)
  	return rv;
  }
  
@@ -767,16 +807,15 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
  /*
   * filt_seltrue:
   *
-@@ -718,7 +826,7 @@ filt_seltruedetach(struct knote *kn)
- }
- 
- const struct filterops seltrue_filtops =
--	{ 1, NULL, filt_seltruedetach, filt_seltrue };
-+	{ 1, NULL, filt_seltruedetach, filt_seltrue, NULL };
+@@ -809,6 +928,7 @@ const struct filterops seltrue_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_seltruedetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- seltrue_kqfilter(dev_t dev, struct knote *kn)
-@@ -977,8 +1085,8 @@ kqueue_register(struct kqueue *kq, struct kevent *kev)
+@@ -1072,8 +1192,8 @@ kqueue_register(struct kqueue *kq, struct kevent *kev)
  	/*
  	 * kn now contains the matching knote, or NULL if no match
  	 */
@@ -787,7 +826,7 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
  			/* create new knote */
  			kn = newkn;
  			newkn = NULL;
-@@ -1038,42 +1146,52 @@ kqueue_register(struct kqueue *kq, struct kevent *kev)
+@@ -1134,41 +1254,51 @@ kqueue_register(struct kqueue *kq, struct kevent *kev)
  				goto done;
  			}
  			atomic_inc_uint(&kfilter->refcnt);
@@ -801,7 +840,10 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
 -			kn->kn_sfflags = kev->fflags;
 -			kn->kn_sdata = kev->data;
 -			kn->kn_kevent.udata = kev->udata;
--		}
++			/* No matching knote and the EV_ADD flag is not set. */
++			error = ENOENT;
++			goto doneunlock;
+ 		}
 -		/*
 -		 * We can get here if we are trying to attach
 -		 * an event to a file descriptor that does not
@@ -810,25 +852,8 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
 -		 */
 -		KASSERT(kn->kn_fop != NULL);
 -		KASSERT(kn->kn_fop->f_event != NULL);
--		KERNEL_LOCK(1, NULL);			/* XXXSMP */
--		rv = (*kn->kn_fop->f_event)(kn, 0);
--		KERNEL_UNLOCK_ONE(NULL);		/* XXXSMP */
--		if (rv)
--			knote_activate(kn);
--	} else {
--		if (kn == NULL) {
-+			/* No matching knote and the EV_ADD flag is not set. */
- 			error = ENOENT;
- 		 	mutex_exit(&fdp->fd_lock);
- 			goto done;
- 		}
--		if (kev->flags & EV_DELETE) {
--			/* knote_detach() drops fdp->fd_lock */
--			knote_detach(kn, fdp, true);
--			goto done;
--		}
- 	}
- 
++	}
++
 +	if (kev->flags & EV_DELETE) {
 +		/* knote_detach() drops fdp->fd_lock */
 +		knote_detach(kn, fdp, true);
@@ -843,14 +868,26 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
 +	kn->kn_kevent.udata = kev->udata;
 +	KASSERT(kn->kn_fop != NULL);
 +	if (!kn->kn_fop->f_isfd && kn->kn_fop->f_touch != NULL) {
-+		KERNEL_LOCK(1, NULL);			/* XXXSMP */
+ 		KERNEL_LOCK(1, NULL);			/* XXXSMP */
+-		rv = (*kn->kn_fop->f_event)(kn, 0);
 +		(*kn->kn_fop->f_touch)(kn, kev, EVENT_REGISTER);
-+		KERNEL_UNLOCK_ONE(NULL);		/* XXXSMP */
-+	} else {
+ 		KERNEL_UNLOCK_ONE(NULL);		/* XXXSMP */
+-		if (rv)
+-			knote_activate(kn);
+ 	} else {
+-		if (kn == NULL) {
+-			error = ENOENT;
+-			goto doneunlock;
+-		}
+-		if (kev->flags & EV_DELETE) {
+-			/* knote_detach() drops fdp->fd_lock */
+-			knote_detach(kn, fdp, true);
+-			goto done;
+-		}
 +		kn->kn_sfflags = kev->fflags;
 +		kn->kn_sdata = kev->data;
-+	}
-+
+ 	}
+ 
 +	/*
 +	 * We can get here if we are trying to attach
 +	 * an event to a file descriptor that does not
@@ -869,7 +906,7 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
  	/* disable knote */
  	if ((kev->flags & EV_DISABLE)) {
  		mutex_spin_enter(&kq->kq_lock);
-@@ -1164,7 +1282,7 @@ kqueue_scan(file_t *fp, size_t maxevents, struct kevent *ulistp,
+@@ -1268,7 +1398,7 @@ kqueue_scan(file_t *fp, size_t maxevents, struct kevent *ulistp,
  	struct timespec	ats, sleepts;
  	struct knote	*kn, *marker, morker;
  	size_t		count, nkev, nevents;
@@ -878,7 +915,7 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
  	filedesc_t	*fdp;
  
  	fdp = curlwp->l_fd;
-@@ -1275,8 +1393,20 @@ kqueue_scan(file_t *fp, size_t maxevents, struct kevent *ulistp,
+@@ -1379,8 +1509,20 @@ kqueue_scan(file_t *fp, size_t maxevents, struct kevent *ulistp,
  					continue;
  				}
  			}
@@ -900,7 +937,7 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
  			nkev++;
  			if (kn->kn_flags & EV_ONESHOT) {
  				/* delete ONESHOT events after retrieval */
-@@ -1289,6 +1419,14 @@ kqueue_scan(file_t *fp, size_t maxevents, struct kevent *ulistp,
+@@ -1393,6 +1535,14 @@ kqueue_scan(file_t *fp, size_t maxevents, struct kevent *ulistp,
  				/* clear state after retrieval */
  				kn->kn_data = 0;
  				kn->kn_fflags = 0;
@@ -916,162 +953,200 @@ index 2ecbc1d7c00d..e4611dc1c8ed 100644
  			} else if (kn->kn_flags & EV_DISPATCH) {
  				kn->kn_status |= KN_DISABLED;
 diff --git a/sys/kern/kern_sig.c b/sys/kern/kern_sig.c
-index 8fece4b248ef..9fa253e4b9b6 100644
+index 5023d3771db1..419409954e87 100644
 --- a/sys/kern/kern_sig.c
 +++ b/sys/kern/kern_sig.c
-@@ -2339,5 +2339,5 @@ filt_signal(struct knote *kn, long hint)
- }
- 
- const struct filterops sig_filtops = {
--	0, filt_sigattach, filt_sigdetach, filt_signal
-+	0, filt_sigattach, filt_sigdetach, filt_signal, NULL
+@@ -2621,4 +2621,5 @@ const struct filterops sig_filtops = {
+ 		.f_attach = filt_sigattach,
+ 		.f_detach = filt_sigdetach,
+ 		.f_event = filt_signal,
++		.f_touch = NULL,
  };
 diff --git a/sys/kern/subr_cprng.c b/sys/kern/subr_cprng.c
-index f7d1a8a833ef..a73588e739a0 100644
+index c29922f8412f..7373015c9327 100644
 --- a/sys/kern/subr_cprng.c
 +++ b/sys/kern/subr_cprng.c
-@@ -257,7 +257,7 @@ static void	filt_cprng_detach(struct knote *);
- static int	filt_cprng_event(struct knote *, long);
+@@ -316,6 +316,7 @@ static const struct filterops cprng_read_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_cprng_detach,
+ 	.f_event = filt_cprng_read_event,
++	.f_touch = NULL,
+ };
  
- static const struct filterops cprng_filtops =
--	{ 1, NULL, filt_cprng_detach, filt_cprng_event };
-+	{ 1, NULL, filt_cprng_detach, filt_cprng_event, NULL };
+ static const struct filterops cprng_write_filtops = {
+@@ -323,6 +324,7 @@ static const struct filterops cprng_write_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_cprng_detach,
+ 	.f_event = filt_cprng_write_event,
++	.f_touch = NULL,
+ };
  
  int
- cprng_strong_kqfilter(struct cprng_strong *cprng, struct knote *kn)
 diff --git a/sys/kern/subr_log.c b/sys/kern/subr_log.c
-index f31658e90bc2..240ce9a5c4b3 100644
+index ad57b693b343..90ecea9808bf 100644
 --- a/sys/kern/subr_log.c
 +++ b/sys/kern/subr_log.c
-@@ -290,7 +290,7 @@ filt_logread(struct knote *kn, long hint)
- }
- 
- static const struct filterops logread_filtops =
--	{ 1, NULL, filt_logrdetach, filt_logread };
-+	{ 1, NULL, filt_logrdetach, filt_logread, NULL };
+@@ -294,6 +294,7 @@ static const struct filterops logread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_logrdetach,
+ 	.f_event = filt_logread,
++	.f_touch = NULL,
+ };
  
  static int
- logkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/kern/sys_pipe.c b/sys/kern/sys_pipe.c
-index d6191d49e527..dda7a67b1698 100644
+index 564c591a6633..fe376fdb417f 100644
 --- a/sys/kern/sys_pipe.c
 +++ b/sys/kern/sys_pipe.c
-@@ -1447,9 +1447,9 @@ filt_pipewrite(struct knote *kn, long hint)
- }
+@@ -1443,6 +1443,7 @@ static const struct filterops pipe_rfiltops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_pipedetach,
+ 	.f_event = filt_piperead,
++	.f_touch = NULL,
+ };
  
- static const struct filterops pipe_rfiltops =
--	{ 1, NULL, filt_pipedetach, filt_piperead };
-+	{ 1, NULL, filt_pipedetach, filt_piperead, NULL };
- static const struct filterops pipe_wfiltops =
--	{ 1, NULL, filt_pipedetach, filt_pipewrite };
-+	{ 1, NULL, filt_pipedetach, filt_pipewrite, NULL };
+ static const struct filterops pipe_wfiltops = {
+@@ -1450,6 +1451,7 @@ static const struct filterops pipe_wfiltops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_pipedetach,
+ 	.f_event = filt_pipewrite,
++	.f_touch = NULL,
+ };
  
  static int
- pipe_kqfilter(file_t *fp, struct knote *kn)
 diff --git a/sys/kern/tty.c b/sys/kern/tty.c
-index 8c6babafdbdd..55f2addf8609 100644
+index c5f670f3d3c4..bf83562a31e7 100644
 --- a/sys/kern/tty.c
 +++ b/sys/kern/tty.c
-@@ -1517,9 +1517,9 @@ filt_ttywrite(struct knote *kn, long hint)
- }
+@@ -1515,6 +1515,7 @@ static const struct filterops ttyread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ttyrdetach,
+ 	.f_event = filt_ttyread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops ttyread_filtops =
--	{ 1, NULL, filt_ttyrdetach, filt_ttyread };
-+	{ 1, NULL, filt_ttyrdetach, filt_ttyread, NULL };
- static const struct filterops ttywrite_filtops =
--	{ 1, NULL, filt_ttywdetach, filt_ttywrite };
-+	{ 1, NULL, filt_ttywdetach, filt_ttywrite, NULL };
+ static const struct filterops ttywrite_filtops = {
+@@ -1522,6 +1523,7 @@ static const struct filterops ttywrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ttywdetach,
+ 	.f_event = filt_ttywrite,
++	.f_touch = NULL,
+ };
  
  int
- ttykqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/kern/tty_pty.c b/sys/kern/tty_pty.c
-index a0bbd8eb49c0..ea5ca0effc74 100644
+index 68d267c8852c..61051c45b044 100644
 --- a/sys/kern/tty_pty.c
 +++ b/sys/kern/tty_pty.c
-@@ -998,9 +998,9 @@ filt_ptcwrite(struct knote *kn, long hint)
- }
+@@ -1006,6 +1006,7 @@ static const struct filterops ptcread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ptcrdetach,
+ 	.f_event = filt_ptcread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops ptcread_filtops =
--	{ 1, NULL, filt_ptcrdetach, filt_ptcread };
-+	{ 1, NULL, filt_ptcrdetach, filt_ptcread, NULL };
- static const struct filterops ptcwrite_filtops =
--	{ 1, NULL, filt_ptcwdetach, filt_ptcwrite };
-+	{ 1, NULL, filt_ptcwdetach, filt_ptcwrite, NULL };
+ static const struct filterops ptcwrite_filtops = {
+@@ -1013,6 +1014,7 @@ static const struct filterops ptcwrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_ptcwdetach,
+ 	.f_event = filt_ptcwrite,
++	.f_touch = NULL,
+ };
  
  int
- ptckqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/kern/uipc_socket.c b/sys/kern/uipc_socket.c
-index 468b200eaaa3..158302f8009a 100644
+index 60d67ff07bda..20d19784c92d 100644
 --- a/sys/kern/uipc_socket.c
 +++ b/sys/kern/uipc_socket.c
-@@ -2336,11 +2336,11 @@ filt_solisten(struct knote *kn, long hint)
- }
+@@ -2312,6 +2312,7 @@ static const struct filterops solisten_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_sordetach,
+ 	.f_event = filt_solisten,
++	.f_touch = NULL,
+ };
  
- static const struct filterops solisten_filtops =
--	{ 1, NULL, filt_sordetach, filt_solisten };
-+	{ 1, NULL, filt_sordetach, filt_solisten, NULL };
- static const struct filterops soread_filtops =
--	{ 1, NULL, filt_sordetach, filt_soread };
-+	{ 1, NULL, filt_sordetach, filt_soread, NULL };
- static const struct filterops sowrite_filtops =
--	{ 1, NULL, filt_sowdetach, filt_sowrite };
-+	{ 1, NULL, filt_sowdetach, filt_sowrite, NULL };
+ static const struct filterops soread_filtops = {
+@@ -2319,6 +2320,7 @@ static const struct filterops soread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_sordetach,
+ 	.f_event = filt_soread,
++	.f_touch = NULL,
+ };
+ 
+ static const struct filterops sowrite_filtops = {
+@@ -2326,6 +2328,7 @@ static const struct filterops sowrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_sowdetach,
+ 	.f_event = filt_sowrite,
++	.f_touch = NULL,
+ };
  
  int
- soo_kqfilter(struct file *fp, struct knote *kn)
 diff --git a/sys/miscfs/fifofs/fifo_vnops.c b/sys/miscfs/fifofs/fifo_vnops.c
-index f88ab95617f8..2c8c5867b198 100644
+index c700c3c2f45d..8a2a57560f1f 100644
 --- a/sys/miscfs/fifofs/fifo_vnops.c
 +++ b/sys/miscfs/fifofs/fifo_vnops.c
-@@ -580,9 +580,9 @@ filt_fifowrite(struct knote *kn, long hint)
- }
+@@ -584,6 +584,7 @@ static const struct filterops fiforead_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_fifordetach,
+ 	.f_event = filt_fiforead,
++	.f_touch = NULL,
+ };
  
- static const struct filterops fiforead_filtops =
--	{ 1, NULL, filt_fifordetach, filt_fiforead };
-+	{ 1, NULL, filt_fifordetach, filt_fiforead, NULL };
- static const struct filterops fifowrite_filtops =
--	{ 1, NULL, filt_fifowdetach, filt_fifowrite };
-+	{ 1, NULL, filt_fifowdetach, filt_fifowrite, NULL };
+ static const struct filterops fifowrite_filtops = {
+@@ -591,6 +592,7 @@ static const struct filterops fifowrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_fifowdetach,
+ 	.f_event = filt_fifowrite,
++	.f_touch = NULL,
+ };
  
  /* ARGSUSED */
- static int
 diff --git a/sys/miscfs/genfs/genfs_vnops.c b/sys/miscfs/genfs/genfs_vnops.c
-index 1c8e4067034e..312d5fc2fce0 100644
+index 4813d9a68765..35eea3eece05 100644
 --- a/sys/miscfs/genfs/genfs_vnops.c
 +++ b/sys/miscfs/genfs/genfs_vnops.c
-@@ -555,11 +555,11 @@ filt_genfsvnode(struct knote *kn, long hint)
- }
+@@ -559,6 +559,7 @@ static const struct filterops genfsread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_genfsdetach,
+ 	.f_event = filt_genfsread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops genfsread_filtops =
--	{ 1, NULL, filt_genfsdetach, filt_genfsread };
-+	{ 1, NULL, filt_genfsdetach, filt_genfsread, NULL };
- static const struct filterops genfswrite_filtops =
--	{ 1, NULL, filt_genfsdetach, filt_genfswrite };
-+	{ 1, NULL, filt_genfsdetach, filt_genfswrite, NULL };
- static const struct filterops genfsvnode_filtops =
--	{ 1, NULL, filt_genfsdetach, filt_genfsvnode };
-+	{ 1, NULL, filt_genfsdetach, filt_genfsvnode, NULL };
+ static const struct filterops genfswrite_filtops = {
+@@ -566,6 +567,7 @@ static const struct filterops genfswrite_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_genfsdetach,
+ 	.f_event = filt_genfswrite,
++	.f_touch = NULL,
+ };
+ 
+ static const struct filterops genfsvnode_filtops = {
+@@ -573,6 +575,7 @@ static const struct filterops genfsvnode_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_genfsdetach,
+ 	.f_event = filt_genfsvnode,
++	.f_touch = NULL,
+ };
  
  int
- genfs_kqfilter(void *v)
 diff --git a/sys/net/bpf.c b/sys/net/bpf.c
-index e33b35d3b74e..b824573db891 100644
+index fdf2b5202e4b..eb6ed98b6fab 100644
 --- a/sys/net/bpf.c
 +++ b/sys/net/bpf.c
-@@ -1482,7 +1482,7 @@ filt_bpfread(struct knote *kn, long hint)
- }
- 
- static const struct filterops bpfread_filtops =
--	{ 1, NULL, filt_bpfrdetach, filt_bpfread };
-+	{ 1, NULL, filt_bpfrdetach, filt_bpfread, NULL };
+@@ -1500,6 +1500,7 @@ static const struct filterops bpfread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_bpfrdetach,
+ 	.f_event = filt_bpfread,
++	.f_touch = NULL,
+ };
  
  static int
- bpf_kqfilter(struct file *fp, struct knote *kn)
 diff --git a/sys/net/if_tap.c b/sys/net/if_tap.c
-index dc9307600ba0..d8a165e6291c 100644
+index 251955d9cf6f..9d1e597eecaa 100644
 --- a/sys/net/if_tap.c
 +++ b/sys/net/if_tap.c
-@@ -1233,9 +1233,9 @@ tap_dev_poll(int unit, int events, struct lwp *l)
+@@ -1219,9 +1219,9 @@ tap_dev_poll(int unit, int events, struct lwp *l)
  }
  
  static struct filterops tap_read_filterops = { 1, NULL, tap_kqdetach,
@@ -1084,127 +1159,60 @@ index dc9307600ba0..d8a165e6291c 100644
  static int
  tap_cdev_kqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/net/if_tun.c b/sys/net/if_tun.c
-index a380cd491239..9a76ab52b625 100644
+index 97ae566f320d..d4d6b515968b 100644
 --- a/sys/net/if_tun.c
 +++ b/sys/net/if_tun.c
-@@ -1078,10 +1078,10 @@ filt_tunread(struct knote *kn, long hint)
- }
+@@ -1091,6 +1091,7 @@ static const struct filterops tunread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_tunrdetach,
+ 	.f_event = filt_tunread,
++	.f_touch = NULL,
+ };
  
- static const struct filterops tunread_filtops =
--	{ 1, NULL, filt_tunrdetach, filt_tunread };
-+	{ 1, NULL, filt_tunrdetach, filt_tunread, NULL };
- 
- static const struct filterops tun_seltrue_filtops =
--	{ 1, NULL, filt_tunrdetach, filt_seltrue };
-+	{ 1, NULL, filt_tunrdetach, filt_seltrue, NULL };
- 
- int
- tunkqfilter(dev_t dev, struct knote *kn)
-diff --git a/sys/netisdn/i4b_i4bdrv.c b/sys/netisdn/i4b_i4bdrv.c
-index 0c8b5ab40079..5ca36c5340f9 100644
---- a/sys/netisdn/i4b_i4bdrv.c
-+++ b/sys/netisdn/i4b_i4bdrv.c
-@@ -992,10 +992,10 @@ filt_i4bread(struct knote *kn, long hint)
- }
- 
- static const struct filterops i4bread_filtops =
--	{ 1, NULL, filt_i4brdetach, filt_i4bread };
-+	{ 1, NULL, filt_i4brdetach, filt_i4bread, NULL };
- 
- static const struct filterops i4b_seltrue_filtops =
--	{ 1, NULL, filt_i4brdetach, filt_seltrue };
-+	{ 1, NULL, filt_i4brdetach, filt_seltrue, NULL };
+ static const struct filterops tun_seltrue_filtops = {
+@@ -1098,6 +1099,7 @@ static const struct filterops tun_seltrue_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_tunrdetach,
+ 	.f_event = filt_seltrue,
++	.f_touch = NULL,
+ };
  
  int
- isdnkqfilter(dev_t dev, struct knote *kn)
-diff --git a/sys/netisdn/i4b_rbch.c b/sys/netisdn/i4b_rbch.c
-index 78bf4d696fec..f6d1ade751c5 100644
---- a/sys/netisdn/i4b_rbch.c
-+++ b/sys/netisdn/i4b_rbch.c
-@@ -843,7 +843,7 @@ filt_i4brbchread(struct knote *kn, long hint)
- }
- 
- static const struct filterops i4brbchread_filtops =
--	{ 1, NULL, filt_i4brbchdetach, filt_i4brbchread };
-+	{ 1, NULL, filt_i4brbchdetach, filt_i4brbchread, NULL };
- 
- static int
- filt_i4brbchwrite(struct knote *kn, long hint)
-@@ -861,7 +861,7 @@ filt_i4brbchwrite(struct knote *kn, long hint)
- }
- 
- static const struct filterops i4brbchwrite_filtops =
--	{ 1, NULL, filt_i4brbchdetach, filt_i4brbchwrite };
-+	{ 1, NULL, filt_i4brbchdetach, filt_i4brbchwrite, NULL };
- 
- int
- isdnbchankqfilter(dev_t dev, struct knote *kn)
-diff --git a/sys/netisdn/i4b_tel.c b/sys/netisdn/i4b_tel.c
-index df505ef12a5e..aa2db8ef07f6 100644
---- a/sys/netisdn/i4b_tel.c
-+++ b/sys/netisdn/i4b_tel.c
-@@ -985,7 +985,7 @@ filt_i4btel_telread(struct knote *kn, long hint)
- }
- 
- static const struct filterops i4btel_telread_filtops =
--	{ 1, NULL, filt_i4btel_detach, filt_i4btel_telread };
-+	{ 1, NULL, filt_i4btel_detach, filt_i4btel_telread, NULL };
- 
- static int
- filt_i4btel_telwrite(struct knote *kn, long hint)
-@@ -1004,7 +1004,7 @@ filt_i4btel_telwrite(struct knote *kn, long hint)
- }
- 
- static const struct filterops i4btel_telwrite_filtops =
--	{ 1, NULL, filt_i4btel_detach, filt_i4btel_telwrite };
-+	{ 1, NULL, filt_i4btel_detach, filt_i4btel_telwrite, NULL };
- 
- static int
- filt_i4btel_dialread(struct knote *kn, long hint)
-@@ -1019,10 +1019,10 @@ filt_i4btel_dialread(struct knote *kn, long hint)
- }
- 
- static const struct filterops i4btel_dialread_filtops =
--	{ 1, NULL, filt_i4btel_detach, filt_i4btel_dialread };
-+	{ 1, NULL, filt_i4btel_detach, filt_i4btel_dialread, NULL };
- 
- static const struct filterops i4btel_seltrue_filtops =
--	{ 1, NULL, filt_i4btel_detach, filt_seltrue };
-+	{ 1, NULL, filt_i4btel_detach, filt_seltrue, NULL };
- 
- int
- isdntelkqfilter(dev_t dev, struct knote *kn)
 diff --git a/sys/nfs/nfs_kq.c b/sys/nfs/nfs_kq.c
-index 6305a328e7c5..804ebe74b869 100644
+index 5bcbe7618d5e..832674bfa2c1 100644
 --- a/sys/nfs/nfs_kq.c
 +++ b/sys/nfs/nfs_kq.c
-@@ -280,9 +280,9 @@ filt_nfsvnode(struct knote *kn, long hint)
+@@ -284,6 +284,7 @@ static const struct filterops nfsread_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_nfsdetach,
+ 	.f_event = filt_nfsread,
++	.f_touch = NULL,
+ };
  
- 
- static const struct filterops nfsread_filtops =
--	{ 1, NULL, filt_nfsdetach, filt_nfsread };
-+	{ 1, NULL, filt_nfsdetach, filt_nfsread, NULL };
- static const struct filterops nfsvnode_filtops =
--	{ 1, NULL, filt_nfsdetach, filt_nfsvnode };
-+	{ 1, NULL, filt_nfsdetach, filt_nfsvnode, NULL };
+ static const struct filterops nfsvnode_filtops = {
+@@ -291,6 +292,7 @@ static const struct filterops nfsvnode_filtops = {
+ 	.f_attach = NULL,
+ 	.f_detach = filt_nfsdetach,
+ 	.f_event = filt_nfsvnode,
++	.f_touch = NULL,
+ };
  
  int
- nfs_kqfilter(void *v)
 diff --git a/sys/sys/event.h b/sys/sys/event.h
-index 135617e4b4f0..6e86ed8e4c85 100644
+index e7d878171699..1c048f29efd4 100644
 --- a/sys/sys/event.h
 +++ b/sys/sys/event.h
-@@ -43,7 +43,8 @@
- #define	EVFILT_PROC		4U	/* attached to struct proc */
+@@ -44,7 +44,8 @@
  #define	EVFILT_SIGNAL		5U	/* attached to struct proc */
  #define	EVFILT_TIMER		6U	/* arbitrary timer (in ms) */
--#define	EVFILT_SYSCOUNT		7U	/* number of filters */
-+#define	EVFILT_USER		7U	/* user events */
-+#define	EVFILT_SYSCOUNT		8U	/* number of filters */
+ #define	EVFILT_FS		7U	/* filesystem events */
+-#define	EVFILT_SYSCOUNT		8U	/* number of filters */
++#define	EVFILT_USER		8U	/* user events */
++#define	EVFILT_SYSCOUNT		9U	/* number of filters */
  
  struct kevent {
  	uintptr_t	ident;		/* identifier for this event */
-@@ -88,6 +89,26 @@ EV_SET_(struct kevent *_kevp, uintptr_t _ident, uint32_t _filter,
+@@ -90,6 +91,26 @@ _EV_SET(struct kevent *_kevp, uintptr_t _ident, uint32_t _filter,
  #define	EV_EOF		0x8000U		/* EOF detected */
  #define	EV_ERROR	0x4000U		/* error, data contains errno */
  
@@ -1231,7 +1239,7 @@ index 135617e4b4f0..6e86ed8e4c85 100644
  /*
   * hint flag for in-kernel use - must not equal any existing note
   */
-@@ -159,6 +180,16 @@ struct kfilter_mapping {
+@@ -161,6 +182,16 @@ struct kfilter_mapping {
   */
  #define	NOTE_SIGNAL	0x08000000U
  
@@ -1248,7 +1256,7 @@ index 135617e4b4f0..6e86ed8e4c85 100644
  /*
   * Callback methods for each filter type.
   */
-@@ -170,6 +201,7 @@ struct filterops {
+@@ -172,6 +203,7 @@ struct filterops {
  					/* called when knote is DELETEd */
  	int	(*f_event)	(struct knote *, long);
  					/* called when event is triggered */
@@ -1256,7 +1264,7 @@ index 135617e4b4f0..6e86ed8e4c85 100644
  };
  
  /*
-@@ -194,6 +226,7 @@ struct knote {
+@@ -196,6 +228,7 @@ struct knote {
  	const struct filterops	*kn_fop;
  	struct kfilter		*kn_kfilter;
  	void 			*kn_hook;
