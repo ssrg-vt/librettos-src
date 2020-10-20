@@ -6,6 +6,11 @@ To fetch all child repositories, please execute
 git submodule update --init
 ```
 
+PLEASE NOTE THAT THIS IS AN EXPERIMENTAL PROTOTYPE SYSTEM WHICH IS NOT
+DESIGNED FOR NORMAL DAILY USE. DO NOT USE IT FOR ANY CRITICAL WORK AND DO
+NOT ACCESS/MODIFY CRITICAL DATA. THE CODE IS PROVIDED "AS IS" WITHOUT
+ANY GUARANTEES, WE ARE NOT RESPONSIBLE/LIABLE FOR ANY DAMAGE AND/OR DATA LOSS!
+
 Below, we provide a brief description. See each repository for additional
 instructions. We will also put a more detailed description here shortly.
 
@@ -40,9 +45,18 @@ Make sure to fully delete the old one (including headers). To install build
 dependencies, your distribution may support corresponding commands such as
 
 ```
-apt-get install build-essential python-dev python3-dev
+apt-get install build-essential python-dev python3-dev flex bison libpci-dev
 apt-get build-dep xen
 ```
+
+(For build-dep, you also need to uncomment corresponding deb-src
+lines in /etc/apt/sources.list and run 'apt-get update' afterwards'.)
+
+Xen compilation can also fail due to weird path errors. Consider using
+'./configure --prefix=/usr' instead of plain './configure'.
+Keep in mind that it may completely mess up your system, so please have
+a proper backup! Please also make sure you do not have any other Xen
+installation in your system.
 
 **Note**: The initial version of the modified Xen hypervisor (4.10.1) was
 tested on Ubuntu 17.10. However, that version only worked with gcc 7.
